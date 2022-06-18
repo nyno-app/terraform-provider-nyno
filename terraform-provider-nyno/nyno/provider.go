@@ -6,7 +6,9 @@ import (
 
 func Provider() *schema.Provider {
 	return &schema.Provider{
-		ResourcesMap:   map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"nyno_template": resourceTemplate(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{},
 	}
 }
