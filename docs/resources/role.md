@@ -7,7 +7,7 @@ description: |-
 ---
 
 # nyno_role (Resource)
-
+Create a role.
 
 
 
