@@ -1,10 +1,10 @@
 #!/bin/bash
 # Run with examples/apply.sh
 
-cd terraform-provider-nyno
+cd internal/provider
 go build -o terraform-provider-nyno
 make install
-cd ../examples
+cd ../../examples
 rm -rf ".terraform"
 rm -f ".terraform.lock.hcl" "terraform.tfstate"
 terraform init

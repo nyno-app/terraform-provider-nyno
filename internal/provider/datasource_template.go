@@ -1,4 +1,4 @@
-package nyno
+package provider
 
 import (
 	"context"
