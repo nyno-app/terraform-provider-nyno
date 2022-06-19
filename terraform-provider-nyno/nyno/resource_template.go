@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 
-	// "errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,12 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const baseURL = "http://localhost:3000/api"
-
-// Create a struct to handler template object.
-
 type Action struct {
-	// ID           string `json:"id"`
+	ID           string `json:"id,omitempty"`
 	Type         string `json:"type"`
 	Path         string `json:"path"`
 	SourceBranch string `json:"sourceBranch"`
@@ -31,7 +26,7 @@ type Action struct {
 }
 
 type Variable struct {
-	// ID           string `json:"id"`
+	ID           string `json:"id,omitempty"`
 	Title        string `json:"title"`
 	Variable     string `json:"variable"`
 	Description  string `json:"description"`
@@ -40,7 +35,7 @@ type Variable struct {
 }
 
 type Permissions struct {
-	// ID          string `json:"id"`
+	ID          string `json:"id,omitempty"`
 	AccessLevel string `json:"accessLevel"`
 	RoleId      string `json:"roleId"`
 }
@@ -242,13 +237,10 @@ func resourceTemplate() *schema.Resource {
 	}
 }
 
-// Function definition to create the resource.
-
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Get fields from terraform resource data.
-
+	// Getting from terraform
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 	actions := d.Get("action").([]interface{})
@@ -265,17 +257,16 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	requestBody, err := json.Marshal(template)
-	// log.Printf("[ERROR] Error encountered: %s", err.Error())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	body := bytes.NewBuffer(requestBody)
 
-	// Send POST to /templates with Template informations
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/templates", baseURL), body)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/templates", m.(Config).api_endpoint), body)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -283,38 +274,41 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, m inter
 	log.Println("Sending http request")
 	r, err := client.Do(req)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	if r.StatusCode != 200 {
 		var response *ResponseError
 		err = json.NewDecoder(r.Body).Decode(&response)
-		return diag.Errorf("Unable to delete template. Status Code: %v. Message: %s", r.StatusCode, response.Error)
+
+		if response == nil {
+			return diag.Errorf("Unable to create template. Status Code: %v", r.StatusCode)
+		}
+		return diag.Errorf("Unable to create template. Status Code: %v. Message: %s", r.StatusCode, response.Error)
 	}
 
 	var response Template
 	err = json.NewDecoder(r.Body).Decode(&response)
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
+	d.Set("name", response.Name)
+	d.Set("description", response.Description)
+	d.Set("actions", response.Actions)
+	d.Set("variables", response.Variables)
+	d.Set("permissions", response.Permissions)
 	d.SetId(response.ID)
 
 	return nil
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
-}
-
-func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
-}
-
-func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%[1]s/templates/%[2]s", baseURL, d.Id()), nil)
+	log.Print(fmt.Sprintf("Sending request to: %[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()))
+	log.Printf("ID:", d.Id())
+	req, err := http.NewRequest("GET", fmt.Sprintf("%[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()), nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -327,6 +321,115 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, m inter
 	if r.StatusCode != 200 {
 		var response *ResponseError
 		err = json.NewDecoder(r.Body).Decode(&response)
+		log.Printf("MyResponse: %s", response)
+		if response == nil {
+			return diag.Errorf("Unable to read template. Status Code: %v", r.StatusCode)
+		}
+		return diag.Errorf("Unable to read template. Status Code: %v. Message: %s", r.StatusCode, response.Error)
+	}
+
+	var response Template
+	err = json.NewDecoder(r.Body).Decode(&response)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("name", response.Name)
+	d.Set("description", response.Description)
+	d.Set("actions", response.Actions)
+	d.Set("variables", response.Variables)
+	d.Set("permissions", response.Permissions)
+
+	return nil
+}
+
+func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Getting from terraform
+	id := d.Id()
+	name := d.Get("name").(string)
+	description := d.Get("description").(string)
+	actions := d.Get("action").([]interface{})
+	variables := d.Get("variable").([]interface{})
+	permissions := d.Get("permissions").([]interface{})
+
+	// Build Template object
+	template := &Template{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		Actions:     expandActions(actions),
+		Variables:   expandVariables(variables),
+		Permissions: expandPermissions(permissions),
+	}
+
+	requestBody, err := json.Marshal(template)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	body := bytes.NewBuffer(requestBody)
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()), body)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	r, err := client.Do(req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if r.StatusCode != 200 {
+		var response *ResponseError
+		err = json.NewDecoder(r.Body).Decode(&response)
+
+		if response == nil {
+			return diag.Errorf("Unable to update template. Status Code: %v", r.StatusCode)
+		}
+
+		return diag.Errorf("Unable to update template. Status Code: %v. Message: %s", r.StatusCode, response.Error)
+	}
+
+	var response Template
+	err = json.NewDecoder(r.Body).Decode(&response)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("name", response.Name)
+	d.Set("description", response.Description)
+	d.Set("actions", response.Actions)
+	d.Set("variables", response.Variables)
+	d.Set("permissions", response.Permissions)
+
+	return nil
+
+}
+
+func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()), nil)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	r, err := client.Do(req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if r.StatusCode != 200 {
+		var response *ResponseError
+		err = json.NewDecoder(r.Body).Decode(&response)
+
+		if response == nil {
+			return diag.Errorf("Unable to delete template. Status Code: %v", r.StatusCode)
+		}
 		return diag.Errorf("Unable to delete template. Status Code: %v. Message: %s", r.StatusCode, response.Error)
 	}
 
