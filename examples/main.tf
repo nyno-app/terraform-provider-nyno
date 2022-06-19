@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     nyno = {
-      version = "0.1.0"
+      version = "1.0.0"
       source  = "nyno.io/nyno/nyno"
     }
   }
@@ -32,7 +32,7 @@ resource "nyno_template" "new" {
     source_branch = "yoyoy"
     target_branch = "efeojf"
     path          = "string"
-    template_code = "efd"
+    template_code = filebase64("templatefile.yaml")
     pull_request  = false
     repository_id = "4fbf3dc3-2a66-41f3-87b7-70c7ec9f9609"
   }
@@ -42,7 +42,7 @@ resource "nyno_template" "new" {
     source_branch = "yoyoy2"
     target_branch = "efeojf2"
     path          = "string"
-    template_code = "efd222"
+    template_code = filebase64("templatefile.yaml")
     pull_request  = true
     repository_id = data.nyno_repository.my_rpository.id
   }

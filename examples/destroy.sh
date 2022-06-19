@@ -1,4 +1,6 @@
 #!/bin/bash
+# Run with examples/destroy.sh
+
 cd terraform-provider-nyno
 go build -o terraform-provider-nyno
 make install
