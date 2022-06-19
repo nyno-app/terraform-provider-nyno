@@ -16,9 +16,12 @@ func Provider() *schema.Provider {
 		ConfigureContextFunc: providerConfigure,
 		ResourcesMap: map[string]*schema.Resource{
 			"nyno_template": resourceTemplate(),
+			"nyno_role":     resourceRole(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nyno_template": dataSourceTemplate(),
+			"nyno_template":   dataSourceTemplate(),
+			"nyno_role":       dataSourceRole(),
+			"nyno_repository": dataSourceRepository(),
 		},
 		Schema: map[string]*schema.Schema{
 			"api_endpoint": {

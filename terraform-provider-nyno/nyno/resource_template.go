@@ -306,8 +306,6 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, m inter
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	log.Print(fmt.Sprintf("Sending request to: %[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()))
-	log.Printf("ID:", d.Id())
 	req, err := http.NewRequest("GET", fmt.Sprintf("%[1]s/templates/%[2]s", m.(Config).api_endpoint, d.Id()), nil)
 	if err != nil {
 		return diag.FromErr(err)
@@ -321,7 +319,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, m interfa
 	if r.StatusCode != 200 {
 		var response *ResponseError
 		err = json.NewDecoder(r.Body).Decode(&response)
-		log.Printf("MyResponse: %s", response)
+		
 		if response == nil {
 			return diag.Errorf("Unable to read template. Status Code: %v", r.StatusCode)
 		}
