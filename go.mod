@@ -1,4 +1,4 @@
-module terraform-provider-nyno
+module github.com/nyno-app/terraform-provider-nyno
 
 go 1.17
 

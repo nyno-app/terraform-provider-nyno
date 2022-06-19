@@ -4,7 +4,7 @@
 cd internal/provider
 go build -o terraform-provider-nyno
 make install
-cd ../../examples
+cd ../../scripts
 rm -rf ".terraform"
 rm -f ".terraform.lock.hcl" "terraform.tfstate"
 terraform init
