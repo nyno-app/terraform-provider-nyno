@@ -2,7 +2,7 @@ HOSTNAME=nyno.io
 NAMESPACE=nyno
 NAME=nyno
 BINARY=terraform-provider-${NAME}
-VERSION=1.0.0
+VERSION=1.0.3
 OS_ARCH=linux_amd64
 
 default: install
