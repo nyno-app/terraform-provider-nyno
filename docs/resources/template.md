@@ -7,7 +7,7 @@ description: |-
 ---
 
 # nyno_template (Resource)
-Create a template for a resource.
+Create a nyno template.
 
 
 
