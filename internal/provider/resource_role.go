@@ -28,6 +28,7 @@ type Role struct {
 	DeleteRepository              bool   `json:"deleteRepository"`
 	GetUser                       bool   `json:"getUser"`
 	UpdateUser                    bool   `json:"updateUser"`
+	CreateUser                    bool   `json:"createUser"`
 	GetRole                       bool   `json:"getRole"`
 	UpdateRole                    bool   `json:"updateRole"`
 	CreateRole                    bool   `json:"createRole"`
@@ -40,6 +41,8 @@ type Role struct {
 	UpdateAllDeployments          bool   `json:"updateAllDeployments"`
 	CreateDeploymentsAllTemplates bool   `json:"createDeploymentsAllTemplates"`
 	DeleteAllDeployment           bool   `json:"deleteAllDeployment"`
+	GetGlobalSettings             bool   `json:"getGlobalSettings"`
+	UpdateGlobalSettings          bool   `json:"updateGlobalSettings"`
 }
 
 // Resource schema definition
@@ -65,6 +68,7 @@ func resourceRole() *schema.Resource {
 			"delete_repository":                {Type: schema.TypeBool, Required: true},
 			"get_user":                         {Type: schema.TypeBool, Required: true},
 			"update_user":                      {Type: schema.TypeBool, Required: true},
+			"create_user":                      {Type: schema.TypeBool, Required: true},
 			"get_role":                         {Type: schema.TypeBool, Required: true},
 			"update_role":                      {Type: schema.TypeBool, Required: true},
 			"create_role":                      {Type: schema.TypeBool, Required: true},
@@ -77,6 +81,8 @@ func resourceRole() *schema.Resource {
 			"update_all_deployments":           {Type: schema.TypeBool, Required: true},
 			"create_deployments_all_templates": {Type: schema.TypeBool, Required: true},
 			"delete_all_deployments":           {Type: schema.TypeBool, Required: true},
+			"get_global_settings":              {Type: schema.TypeBool, Required: true},
+			"update_global_settings":           {Type: schema.TypeBool, Required: true},
 		},
 	}
 }
@@ -96,6 +102,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		DeleteRepository:              d.Get("delete_repository").(bool),
 		GetUser:                       d.Get("get_user").(bool),
 		UpdateUser:                    d.Get("update_user").(bool),
+		CreateUser:                    d.Get("create_user").(bool),
 		GetRole:                       d.Get("get_role").(bool),
 		UpdateRole:                    d.Get("update_role").(bool),
 		CreateRole:                    d.Get("create_role").(bool),
@@ -108,6 +115,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		UpdateAllDeployments:          d.Get("update_all_deployments").(bool),
 		CreateDeploymentsAllTemplates: d.Get("create_deployments_all_templates").(bool),
 		DeleteAllDeployment:           d.Get("delete_all_deployments").(bool),
+		GetGlobalSettings:             d.Get("get_global_settings").(bool),
+		UpdateGlobalSettings:          d.Get("update_global_settings").(bool),
 	}
 
 	requestBody, err := json.Marshal(role)
@@ -124,6 +133,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Cookie", fmt.Sprintf("next-auth.session-token=%[1]s", m.(Config).session_token))
 
 	log.Println("Sending http request")
 	r, err := client.Do(req)
@@ -158,6 +168,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("delete_repository", response.DeleteRepository)
 	d.Set("get_user", response.GetUser)
 	d.Set("update_user", response.UpdateUser)
+	d.Set("create_user", response.CreateUser)
 	d.Set("get_role", response.GetRole)
 	d.Set("update_role", response.UpdateRole)
 	d.Set("create_role", response.CreateRole)
@@ -170,6 +181,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("update_all_deployments", response.UpdateAllDeployments)
 	d.Set("create_deployments_all_templates", response.CreateDeploymentsAllTemplates)
 	d.Set("delete_all_deployments", response.DeleteAllDeployment)
+	d.Set("get_global_settings", response.GetGlobalSettings)
+	d.Set("update_global_settings", response.UpdateGlobalSettings)
 	d.SetId(response.ID)
 
 	return nil
@@ -182,6 +195,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	req.Header.Set("Cookie", fmt.Sprintf("next-auth.session-token=%[1]s", m.(Config).session_token))
 
 	r, err := client.Do(req)
 	if err != nil {
@@ -214,6 +229,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	d.Set("delete_repository", response.DeleteRepository)
 	d.Set("get_user", response.GetUser)
 	d.Set("update_user", response.UpdateUser)
+	d.Set("create_user", response.CreateUser)
 	d.Set("get_role", response.GetRole)
 	d.Set("update_role", response.UpdateRole)
 	d.Set("create_role", response.CreateRole)
@@ -226,6 +242,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	d.Set("update_all_deployments", response.UpdateAllDeployments)
 	d.Set("create_deployments_all_templates", response.CreateDeploymentsAllTemplates)
 	d.Set("delete_all_deployments", response.DeleteAllDeployment)
+	d.Set("get_global_settings", response.GetGlobalSettings)
+	d.Set("update_global_settings", response.UpdateGlobalSettings)
 
 	return nil
 }
@@ -246,6 +264,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		DeleteRepository:              d.Get("delete_repository").(bool),
 		GetUser:                       d.Get("get_user").(bool),
 		UpdateUser:                    d.Get("update_user").(bool),
+		CreateUser:                    d.Get("create_user").(bool),
 		GetRole:                       d.Get("get_role").(bool),
 		UpdateRole:                    d.Get("update_role").(bool),
 		CreateRole:                    d.Get("create_role").(bool),
@@ -258,6 +277,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		UpdateAllDeployments:          d.Get("update_all_deployments").(bool),
 		CreateDeploymentsAllTemplates: d.Get("create_deployments_all_templates").(bool),
 		DeleteAllDeployment:           d.Get("delete_all_deployments").(bool),
+		GetGlobalSettings:             d.Get("get_global_settings").(bool),
+		UpdateGlobalSettings:          d.Get("update_global_settings").(bool),
 	}
 
 	requestBody, err := json.Marshal(role)
@@ -274,6 +295,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Cookie", fmt.Sprintf("next-auth.session-token=%[1]s", m.(Config).session_token))
+
 	r, err := client.Do(req)
 	if err != nil {
 		return diag.FromErr(err)
@@ -307,6 +330,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("delete_repository", response.DeleteRepository)
 	d.Set("get_user", response.GetUser)
 	d.Set("update_user", response.UpdateUser)
+	d.Set("create_user", response.CreateUser)
 	d.Set("get_role", response.GetRole)
 	d.Set("update_role", response.UpdateRole)
 	d.Set("create_role", response.CreateRole)
@@ -319,6 +343,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	d.Set("update_all_deployments", response.UpdateAllDeployments)
 	d.Set("create_deployments_all_templates", response.CreateDeploymentsAllTemplates)
 	d.Set("delete_all_deployments", response.DeleteAllDeployment)
+	d.Set("get_global_settings", response.GetGlobalSettings)
+	d.Set("update_global_settings", response.UpdateGlobalSettings)
 
 	return nil
 
@@ -331,6 +357,8 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	req.Header.Set("Cookie", fmt.Sprintf("next-auth.session-token=%[1]s", m.(Config).session_token))
 
 	r, err := client.Do(req)
 	if err != nil {

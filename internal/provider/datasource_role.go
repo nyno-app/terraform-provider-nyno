@@ -26,6 +26,7 @@ func dataSourceRole() *schema.Resource {
 			"delete_repository":                {Type: schema.TypeBool, Computed: true},
 			"get_user":                         {Type: schema.TypeBool, Computed: true},
 			"update_user":                      {Type: schema.TypeBool, Computed: true},
+			"create_user":                      {Type: schema.TypeBool, Computed: true},
 			"get_role":                         {Type: schema.TypeBool, Computed: true},
 			"update_role":                      {Type: schema.TypeBool, Computed: true},
 			"create_role":                      {Type: schema.TypeBool, Computed: true},
@@ -38,6 +39,8 @@ func dataSourceRole() *schema.Resource {
 			"update_all_deployments":           {Type: schema.TypeBool, Computed: true},
 			"create_deployments_all_templates": {Type: schema.TypeBool, Computed: true},
 			"delete_all_deployments":           {Type: schema.TypeBool, Computed: true},
+			"get_global_settings":              {Type: schema.TypeBool, Computed: true},
+			"update_global_settings":           {Type: schema.TypeBool, Computed: true},
 		},
 	}
 }

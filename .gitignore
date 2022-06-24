@@ -3,3 +3,4 @@ terraform.tfstate*
 .terraform/*
 .terraform.lock.hcl
 linux_amd64
+terraform-provider-nyno

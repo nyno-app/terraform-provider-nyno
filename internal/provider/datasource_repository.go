@@ -54,6 +54,8 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
+	req.Header.Set("Cookie", fmt.Sprintf("next-auth.session-token=%[1]s" ,m.(Config).session_token))
+
 	r, err := client.Do(req)
 	if err != nil {
 		return diag.FromErr(err)
